@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "LintMail",
+  "version": "0.5.0",
+  "description": "Professional email audit tool. WCAG contrast, ESP detection, 5 client checks, A/B mode, history, PDF/MD export.",
+  "permissions": ["sidePanel", "activeTab", "scripting", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "side_panel": {
+    "default_path": "src/panel.html"
+  },
+  "action": {
+    "default_title": "Open LintMail",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>LintMail</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+
+    /* ─────────────────────────────────────────
+       TOKENS — Light (default)
+    ───────────────────────────────────────── */
+    :root {
+      --bg   : #F4F5F9;
+      --sf   : #FFFFFF;
+      --sf2  : #EDEEF5;
+      --sf3  : #E2E4EF;
+      --bd   : #D8DAEA;
+      --bd2  : #ECEEF8;
+      --ink  : #111827;
+      --ink2 : #4B5368;
+      --ink3 : #9198B0;
+      --ac      : #5B5EF4;
+      --ac-h    : #4244D4;
+      --ac-bg   : rgba(91,94,244,.08);
+      --ac-ring : rgba(91,94,244,.20);
+      --ok  : #0E9F6E;  --ok-bg : rgba(14,159,110,.09);
+      --wn  : #C97A10;  --wn-bg : rgba(201,122,16,.09);
+      --er  : #DC2626;  --er-bg : rgba(220,38,38,.09);
+      --sh  : 0 1px 2px rgba(0,0,0,.06), 0 1px 3px rgba(0,0,0,.04);
+      --sh2 : 0 4px 16px rgba(0,0,0,.10), 0 2px 4px rgba(0,0,0,.04);
+      --font : 'Poppins', sans-serif;
+      --mono : 'JetBrains Mono', monospace;
+      --r    : 8px;
+      --r2   : 12px;
+    }
+
+    /* ─────────────────────────────────────────
+       TOKENS — Dark
+    ───────────────────────────────────────── */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg   : #10111A;
+        --sf   : #181923;
+        --sf2  : #1F2130;
+        --sf3  : #272A3C;
+        --bd   : rgba(255,255,255,.09);
+        --bd2  : rgba(255,255,255,.04);
+        --ink  : #E8EAF6;
+        --ink2 : #868DAA;
+        --ink3 : #474E6B;
+        --ac      : #7577F6;
+        --ac-h    : #5B5EF4;
+        --ac-bg   : rgba(117,119,246,.12);
+        --ac-ring : rgba(117,119,246,.25);
+        --ok  : #2DD4A0;  --ok-bg : rgba(45,212,160,.10);
+        --wn  : #F6B346;  --wn-bg : rgba(246,179,70,.10);
+        --er  : #F87171;  --er-bg : rgba(248,113,113,.10);
+        --sh  : 0 1px 3px rgba(0,0,0,.4);
+        --sh2 : 0 6px 24px rgba(0,0,0,.5);
+      }
+    }
+
+    /* ─────────────────────────────────────────
+       BASE
+    ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100vh; overflow: hidden; }
+    body { font-family: var(--font); background: var(--bg); color: var(--ink); font-size: 13px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--bd); border-radius: 99px; }
+
+    /* ─── SHELL ─── */
+    .shell { display: flex; flex-direction: column; height: 100vh; position: relative; overflow: hidden; }
+
+    /* ─────────────────────────────────────────
+       HEADER
+    ───────────────────────────────────────── */
+    header { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; height: 50px; flex-shrink: 0; background: var(--sf); border-bottom: 1px solid var(--bd); }
+    .brand { display: flex; align-items: center; gap: 9px; }
+    .brand-dot { width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0; background: var(--ac); display: flex; align-items: center; justify-content: center; }
+    .brand-dot svg { width: 14px; height: 14px; fill: #fff; }
+    .brand-name { font-size: 14px; font-weight: 700; letter-spacing: -.3px; color: var(--ink); }
+    .brand-name em { font-style: normal; color: var(--ac); }
+    .hdr-right { display: flex; align-items: center; gap: 6px; }
+    .pill { display: flex; background: var(--sf2); border: 1px solid var(--bd); border-radius: 99px; padding: 2px; gap: 1px; }
+    .pill button { padding: 3px 11px; border: none; border-radius: 99px; background: transparent; font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--ink3); cursor: pointer; transition: background .15s, color .15s; }
+    .pill button.on { background: var(--ac); color: #fff; }
+    .ico-btn { width: 32px; height: 32px; border: none; background: transparent; border-radius: var(--r); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--ink3); transition: background .15s, color .15s; }
+    .ico-btn:hover { background: var(--sf2); color: var(--ink2); }
+
+    /* ─────────────────────────────────────────
+       INPUT SECTION
+    ───────────────────────────────────────── */
+    #inputSection { flex-shrink: 0; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; max-height: 62vh; transition: max-height .25s ease, padding .25s ease; }
+    #inputSection.collapsed { max-height: 0; overflow: hidden; padding-top: 0; padding-bottom: 0; }
+    .mode-tabs { display: flex; gap: 2px; background: var(--sf2); border: 1px solid var(--bd); border-radius: var(--r); padding: 3px; }
+    .mtab { flex: 1; padding: 6px 4px; border: none; background: transparent; border-radius: 6px; font-family: var(--font); font-size: 11px; font-weight: 500; color: var(--ink3); cursor: pointer; transition: all .15s; }
+    .mtab.on { background: var(--sf); color: var(--ink); box-shadow: var(--sh); }
+    .mpanel { display: none; }
+    .mpanel.on { display: block; }
+    textarea.code-in { width: 100%; height: 108px; background: var(--sf); border: 1.5px solid var(--bd); border-radius: var(--r); color: var(--ink); font-family: var(--mono); font-size: 11px; padding: 10px 12px; resize: none; outline: none; line-height: 1.65; transition: border-color .15s, box-shadow .15s; }
+    textarea.code-in::placeholder { color: var(--ink3); }
+    textarea.code-in:focus { border-color: var(--ac); box-shadow: 0 0 0 3px var(--ac-ring); }
+    .ab-wrap { display: flex; gap: 10px; }
+    .ab-col { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+    .ab-lbl { font-family: var(--mono); font-size: 9px; font-weight: 600; letter-spacing: .7px; text-transform: uppercase; color: var(--ac); }
+    textarea.code-ab { width: 100%; height: 88px; background: var(--sf); border: 1.5px solid var(--bd); border-radius: var(--r); color: var(--ink); font-family: var(--mono); font-size: 10px; padding: 8px 10px; resize: none; outline: none; transition: border-color .15s, box-shadow .15s; }
+    textarea.code-ab:focus { border-color: var(--ac); box-shadow: 0 0 0 3px var(--ac-ring); }
+    .drop { border: 1.5px dashed var(--bd); border-radius: var(--r2); padding: 28px 16px; text-align: center; cursor: pointer; background: var(--sf); display: flex; flex-direction: column; align-items: center; gap: 6px; transition: border-color .2s, background .2s; }
+    .drop:hover, .drop.over { border-color: var(--ac); background: var(--ac-bg); }
+    .dz-icon { font-size: 24px; opacity: .35; line-height: 1; }
+    .dz-text { font-size: 12px; color: var(--ink2); font-weight: 500; }
+    .dz-text strong { color: var(--ac); cursor: pointer; font-weight: 600; }
+    .dz-hint { font-size: 10px; color: var(--ink3); font-family: var(--mono); }
+    #fileIn { display: none; }
+    .info-strip { background: var(--sf2); border: 1px solid var(--bd); border-radius: var(--r); padding: 10px 12px; font-size: 12px; color: var(--ink2); line-height: 1.6; }
+    .info-strip strong { color: var(--ink); display: block; margin-bottom: 2px; font-weight: 600; }
+    .flbl { font-family: var(--mono); font-size: 9px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--ink3); }
+    select.sel { width: 100%; padding: 8px 10px; background: var(--sf); border: 1.5px solid var(--bd); border-radius: var(--r); color: var(--ink); font-family: var(--font); font-size: 12px; font-weight: 500; outline: none; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='%239198B0'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; transition: border-color .15s, box-shadow .15s; }
+    select.sel:focus { border-color: var(--ac); box-shadow: 0 0 0 3px var(--ac-ring); }
+    .act-row { display: flex; align-items: center; gap: 8px; }
+    .btn-g { padding: 9px 14px; background: transparent; border: 1.5px solid var(--bd); border-radius: var(--r); color: var(--ink2); font-family: var(--font); font-size: 12px; font-weight: 500; cursor: pointer; transition: all .15s; white-space: nowrap; }
+    .btn-g:hover { background: var(--sf2); color: var(--ink); border-color: var(--ink3); }
+    .btn-p { flex: 1; padding: 9px 16px; background: var(--ac); border: none; border-radius: var(--r); color: #fff; font-family: var(--font); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: background .15s, transform .15s, box-shadow .15s; }
+    .btn-p:hover { background: var(--ac-h); transform: translateY(-1px); box-shadow: 0 4px 12px var(--ac-ring); }
+    .btn-p:active { transform: translateY(0); }
+    .btn-p:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+    .spin { width: 13px; height: 13px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .65s linear infinite; display: none; flex-shrink: 0; }
+    .btn-p.ld .spin { display: block; }
+    .btn-p.ld .lbl { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty-state { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 18px 12px; gap: 6px; }
+    .empty-glyph { font-family: var(--mono); font-size: 28px; color: var(--ink3); letter-spacing: -2px; }
+    .empty-t { font-size: 13px; font-weight: 600; color: var(--ink2); }
+    .empty-b { font-size: 11px; color: var(--ink3); max-width: 200px; line-height: 1.6; }
+
+    /* ─────────────────────────────────────────
+       STATUS BAR
+    ───────────────────────────────────────── */
+    #statusBar { display: none; align-items: center; gap: 12px; padding: 10px 16px; background: var(--sf); border-top: 1px solid var(--bd); border-bottom: 1px solid var(--bd); flex-shrink: 0; }
+    #statusBar.on { display: flex; }
+    .s-score { display: flex; align-items: baseline; gap: 2px; flex-shrink: 0; }
+    .s-num { font-family: var(--mono); font-size: 28px; font-weight: 700; line-height: 1; letter-spacing: -1.5px; }
+    .s-num.great { color: var(--ok); }
+    .s-num.ok    { color: var(--wn); }
+    .s-num.poor  { color: var(--er); }
+    .s-slash { font-family: var(--mono); font-size: 13px; color: var(--ink3); }
+    .s-meta { flex: 1; min-width: 0; }
+    .s-grade { font-size: 11px; font-weight: 600; margin-bottom: 1px; }
+    .s-grade.great { color: var(--ok); }
+    .s-grade.ok    { color: var(--wn); }
+    .s-grade.poor  { color: var(--er); }
+    .s-cap { font-size: 10px; color: var(--ink3); font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .s-pills { display: flex; gap: 5px; flex-shrink: 0; flex-wrap: wrap; }
+    .s-pill { font-family: var(--mono); font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 99px; background: var(--sf2); color: var(--ink2); border: 1px solid var(--bd); }
+    .s-pill.wn { background: var(--wn-bg); color: var(--wn); border-color: transparent; }
+    .s-pill.er { background: var(--er-bg); color: var(--er); border-color: transparent; }
+
+    /* ─────────────────────────────────────────
+       RESULT TABS
+    ───────────────────────────────────────── */
+    #rtabs { display: none; background: var(--sf); border-bottom: 1px solid var(--bd); flex-shrink: 0; }
+    #rtabs.on { display: flex; }
+    .rtab { flex: 1; padding: 11px 4px 9px; border: none; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font); font-size: 11px; font-weight: 500; color: var(--ink3); cursor: pointer; transition: all .15s; }
+    .rtab.on { color: var(--ac); border-bottom-color: var(--ac); }
+    .rtab:hover:not(.on) { color: var(--ink2); background: var(--sf2); }
+
+    /* ─────────────────────────────────────────
+       RESULT PANELS
+    ───────────────────────────────────────── */
+    #resultArea { flex: 1; overflow: hidden; display: none; position: relative; }
+    #resultArea.on { display: block; }
+    .rpanel { display: none; position: absolute; inset: 0; overflow-y: auto; padding: 16px; flex-direction: column; gap: 10px; }
+    .rpanel.on { display: flex; }
+
+    /* ─── AI Strip ─── */
+    .ai-strip { background: var(--sf); border: 1px solid var(--bd); border-left: 3px solid var(--ac); border-radius: var(--r); padding: 12px 14px; display: none; }
+    .ai-strip.on { display: block; }
+    .ai-head { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; }
+    .ai-tag { font-family: var(--mono); font-size: 9px; font-weight: 600; letter-spacing: .7px; text-transform: uppercase; color: var(--ac); background: var(--ac-bg); padding: 2px 8px; border-radius: 99px; }
+    .ai-lbl { font-size: 11px; font-weight: 500; color: var(--ink2); }
+    .ai-body { font-size: 12px; color: var(--ink2); line-height: 1.65; }
+    .ai-ld { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--ink3); }
+    .ai-sp { width: 12px; height: 12px; border: 2px solid var(--bd); border-top-color: var(--ac); border-radius: 50%; animation: spin .65s linear infinite; }
+    .esp-badge { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10px; font-weight: 500; padding: 3px 10px; border-radius: 99px; background: var(--sf2); border: 1px solid var(--bd); color: var(--ink2); }
+    .esp-badge.on { background: var(--ac-bg); color: var(--ac); }
+
+    /* ─────────────────────────────────────────
+       CATEGORY CARDS
+    ───────────────────────────────────────── */
+    .cats { display: flex; flex-direction: column; gap: 8px; }
+    .cat { background: var(--sf); border: 1px solid var(--bd); border-radius: var(--r2); overflow: hidden; box-shadow: var(--sh); transition: border-color .15s; }
+    .cat:hover { border-color: var(--ac); }
+    .cat-h { display: flex; align-items: center; gap: 10px; padding: 11px 14px; cursor: pointer; user-select: none; transition: background .12s; }
+    .cat-h:hover { background: var(--sf2); }
+    .cat-ico { width: 30px; height: 30px; flex-shrink: 0; background: var(--sf2); border: 1px solid var(--bd); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .cat-meta { flex: 1; min-width: 0; }
+    .cat-name { font-size: 12px; font-weight: 600; margin-bottom: 5px; }
+    .cat-track { height: 3px; background: var(--sf3); border-radius: 99px; overflow: hidden; }
+    .cat-fill { height: 100%; border-radius: 99px; transition: width .5s cubic-bezier(.34,1.4,.64,1); }
+    .cat-fill.great { background: var(--ok); }
+    .cat-fill.ok    { background: var(--wn); }
+    .cat-fill.poor  { background: var(--er); }
+    .cat-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
+    .cat-sc { font-family: var(--mono); font-size: 14px; font-weight: 700; letter-spacing: -.5px; }
+    .cat-sc.great { color: var(--ok); }
+    .cat-sc.ok    { color: var(--wn); }
+    .cat-sc.poor  { color: var(--er); }
+    .cat-bm { font-size: 9px; font-family: var(--mono); color: var(--ink3); }
+    .cat-bm.above { color: var(--ok); }
+    .cat-bm.below { color: var(--er); }
+    .diff-badge { font-family: var(--mono); font-size: 9px; font-weight: 600; padding: 1px 6px; border-radius: 99px; margin-left: 3px; }
+    .diff-up   { background: var(--ok-bg); color: var(--ok); }
+    .diff-down { background: var(--er-bg); color: var(--er); }
+    .diff-eq   { background: var(--sf2);   color: var(--ink3); }
+    .cat-chv { font-size: 11px; color: var(--ink3); transition: transform .2s; margin-left: 4px; flex-shrink: 0; }
+    .cat.open .cat-chv { transform: rotate(180deg); }
+    .cat-body { display: none; border-top: 1px solid var(--bd); }
+    .cat.open .cat-body { display: block; }
+    .rule { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--bd2); }
+    .rule:last-child { border-bottom: none; }
+    .rule-s { width: 18px; height: 18px; border-radius: 5px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-family: var(--mono); font-weight: 700; }
+    .rule-s[style*="--ok"] { background: var(--ok-bg); }
+    .rule-s[style*="--wn"] { background: var(--wn-bg); }
+    .rule-s[style*="--er"] { background: var(--er-bg); }
+    .rule-n { font-size: 11px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+    .rule-d { font-size: 11px; color: var(--ink2); line-height: 1.55; }
+    .rule-d.wn { color: var(--wn); }
+    .rule-d.fl { color: var(--er); }
+
+    /* ─────────────────────────────────────────
+       BOTTOM BAR
+    ───────────────────────────────────────── */
+    .bot-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: auto; padding-top: 14px; }
+    .btn-o { padding: 7px 12px; background: var(--sf); border: 1px solid var(--bd); border-radius: var(--r); color: var(--ink2); font-family: var(--font); font-size: 11px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all .15s; white-space: nowrap; box-shadow: var(--sh); }
+    .btn-o:hover { border-color: var(--ac); color: var(--ac); background: var(--ac-bg); }
+    .save-wrap { position: relative; }
+    .save-menu { position: absolute; bottom: calc(100% + 6px); left: 0; background: var(--sf); border: 1px solid var(--bd); border-radius: var(--r2); box-shadow: var(--sh2); min-width: 172px; overflow: hidden; z-index: 200; display: none; }
+    .save-menu.on { display: block; }
+    .save-opt { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-family: var(--font); font-size: 11px; font-weight: 500; color: var(--ink); cursor: pointer; border: none; background: transparent; width: 100%; text-align: left; transition: background .12s; }
+    .save-opt:hover { background: var(--sf2); }
+    .save-opt-icon { font-size: 13px; width: 16px; text-align: center; flex-shrink: 0; }
+    .btn-coffee { padding: 7px 12px; background: #E08B00; border: none; border-radius: var(--r); color: #fff; font-family: var(--font); font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; text-decoration: none; transition: all .15s; white-space: nowrap; }
+    .btn-coffee:hover { background: #C47A00; transform: translateY(-1px); }
+
+    /* ─────────────────────────────────────────
+       PREVIEW
+    ───────────────────────────────────────── */
+    .prev-tb { display: flex; align-items: center; justify-content: space-between; padding: 0 0 12px; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
+    .segrow { display: flex; gap: 2px; background: var(--sf2); border: 1px solid var(--bd); border-radius: var(--r); padding: 2px; }
+    .segrow button { padding: 5px 12px; border: none; border-radius: 6px; background: transparent; font-family: var(--font); font-size: 11px; font-weight: 500; color: var(--ink3); cursor: pointer; transition: all .15s; }
+    .segrow button.on { background: var(--sf); color: var(--ink); box-shadow: var(--sh); }
+    .wseg { display: flex; gap: 4px; }
+    .wseg button { padding: 4px 10px; border: 1px solid var(--bd); border-radius: var(--r); background: transparent; font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--ink3); cursor: pointer; transition: all .15s; }
+    .wseg button.on { border-color: var(--ac); color: var(--ac); background: var(--ac-bg); }
+    .prev-notice { font-family: var(--mono); font-size: 9px; color: var(--ink3); display: flex; align-items: center; gap: 5px; }
+    .prev-notice::before { content: ''; width: 5px; height: 5px; background: var(--wn); border-radius: 50%; flex-shrink: 0; }
+    .prev-panel { display: none; flex-direction: column; flex: 1; min-height: 0; }
+    .prev-panel.on { display: flex; }
+    .prev-modes { display: flex; gap: 4px; flex-wrap: wrap; padding-bottom: 8px; flex-shrink: 0; }
+    .prev-mode-btn { padding: 4px 10px; border: 1px solid var(--bd); border-radius: 99px; background: transparent; font-family: var(--font); font-size: 10px; font-weight: 500; color: var(--ink2); cursor: pointer; transition: all .15s; }
+    .prev-mode-btn.on { border-color: var(--ac); color: var(--ac); background: var(--ac-bg); }
+    .pcanvas { flex: 1; overflow: auto; background: var(--sf2); display: flex; align-items: flex-start; justify-content: center; padding: 14px; border: 1px solid var(--bd); border-radius: var(--r2); min-height: 200px; }
+    .pcanvas-rel { position: relative; display: inline-block; }
+    .fshell { background: #fff; border-radius: 6px; overflow: hidden; box-shadow: var(--sh2); transition: width .25s ease; flex-shrink: 0; }
+    .fshell.d { width: 100%; max-width: 540px; }
+    .fshell.m { width: 375px; }
+    #previewFrame { width: 100%; border: none; display: block; min-height: 300px; }
+    .fold-line { position: absolute; left: 0; right: 0; height: 1px; background: var(--er); opacity: .7; pointer-events: none; z-index: 10; }
+    .fold-label { position: absolute; right: 4px; font-family: var(--mono); font-size: 9px; color: var(--er); background: var(--sf); padding: 1px 5px; border-radius: 3px; top: -8px; }
+    .src-hdr { display: flex; align-items: center; justify-content: space-between; padding-bottom: 8px; flex-shrink: 0; }
+    .src-meta { font-family: var(--mono); font-size: 10px; color: var(--ink3); }
+    .src-copy { padding: 4px 10px; border: 1px solid var(--bd); border-radius: var(--r); background: transparent; font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--ink2); cursor: pointer; transition: all .15s; }
+    .src-copy:hover { border-color: var(--ac); color: var(--ac); }
+    .src-scroll { flex: 1; overflow: auto; padding: 12px; background: var(--sf); border: 1px solid var(--bd); border-radius: var(--r2); }
+    pre.src { font-family: var(--mono); font-size: 11px; line-height: 1.7; white-space: pre-wrap; word-break: break-all; color: var(--ink); }
+    .hl-tag { color: var(--ac); }
+    .hl-attr { color: #E879A0; }
+    .hl-val { color: var(--ok); }
+    .hl-comment { color: var(--ink3); font-style: italic; }
+
+    /* ─────────────────────────────────────────
+       COMPAT — real provider logos via JS
+    ───────────────────────────────────────── */
+    .prov { background: var(--sf); border: 1px solid var(--bd); border-radius: var(--r2); overflow: hidden; box-shadow: var(--sh); transition: border-color .15s; margin-bottom: 8px; }
+    .prov:last-child { margin-bottom: 0; }
+    .prov:hover { border-color: var(--ac); }
+    .prov-h { display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer; user-select: none; transition: background .12s; }
+    .prov-h:hover { background: var(--sf2); }
+    /* .prov-logo is now the outer wrapper rendered by JS */
+    .prov-logo { width: 34px; height: 34px; flex-shrink: 0; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .prov-logo svg { width: 22px; height: 22px; display: block; }
+    .prov-info { flex: 1; min-width: 0; }
+    .prov-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+    .prov-vers { font-size: 10px; font-family: var(--mono); color: var(--ink3); }
+    .prov-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+    .prov-sc { font-family: var(--mono); font-size: 14px; font-weight: 700; letter-spacing: -.5px; }
+    .prov-sc.great { color: var(--ok); }
+    .prov-sc.ok    { color: var(--wn); }
+    .prov-sc.poor  { color: var(--er); }
+    .prov-tag { font-size: 9px; font-weight: 600; padding: 2px 8px; border-radius: 99px; font-family: var(--mono); }
+    .prov-tag.great { background: var(--ok-bg); color: var(--ok); }
+    .prov-tag.ok    { background: var(--wn-bg); color: var(--wn); }
+    .prov-tag.poor  { background: var(--er-bg); color: var(--er); }
+    .prov-chv { font-size: 11px; color: var(--ink3); transition: transform .2s; margin-left: 4px; flex-shrink: 0; }
+    .prov.open .prov-chv { transform: rotate(180deg); }
+    .prov-body { display: none; border-top: 1px solid var(--bd); }
+    .prov.open .prov-body { display: block; }
+    .pi { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--bd2); }
+    .pi:last-child { border-bottom: none; }
+    .pi-ico { font-size: 11px; flex-shrink: 0; margin-top: 1px; font-family: var(--mono); font-weight: 700; }
+    .pi-name { font-size: 11px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+    .pi-d { font-size: 11px; color: var(--ink2); line-height: 1.55; }
+    .pi-d.wn { color: var(--wn); }
+    .pi-d.fl { color: var(--er); }
+    .compat-note { font-family: var(--mono); font-size: 9px; color: var(--ink3); text-align: center; padding-top: 8px; line-height: 1.6; }
+
+    /* ─────────────────────────────────────────
+       HISTORY
+    ───────────────────────────────────────── */
+    .hist-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; flex-shrink: 0; }
+    .hist-title { font-family: var(--mono); font-size: 9px; font-weight: 600; color: var(--ink3); letter-spacing: .8px; text-transform: uppercase; }
+    .hist-clear { padding: 3px 10px; border: 1px solid var(--bd); border-radius: 99px; background: transparent; font-family: var(--mono); font-size: 10px; color: var(--ink3); cursor: pointer; transition: all .15s; }
+    .hist-clear:hover { border-color: var(--er); color: var(--er); }
+    .hist-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 36px 12px; text-align: center; color: var(--ink3); font-size: 12px; }
+    .hist-entry { background: var(--sf); border: 1px solid var(--bd); border-radius: var(--r2); padding: 10px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all .15s; margin-bottom: 8px; box-shadow: var(--sh); }
+    .hist-entry:last-child { margin-bottom: 0; }
+    .hist-entry:hover { border-color: var(--ac); }
+    .hist-sc { font-family: var(--mono); font-size: 20px; font-weight: 700; flex-shrink: 0; width: 40px; text-align: center; letter-spacing: -1px; }
+    .hist-meta { flex: 1; min-width: 0; }
+    .hist-lbl { font-size: 12px; font-weight: 500; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hist-sub { font-size: 10px; font-family: var(--mono); color: var(--ink3); }
+    .hist-diff { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
+    .hist-del { padding: 3px 7px; border: 1px solid var(--bd); border-radius: 99px; background: transparent; font-size: 10px; color: var(--ink3); cursor: pointer; transition: all .15s; }
+    .hist-del:hover { border-color: var(--er); color: var(--er); background: var(--er-bg); }
+
+    /* ─────────────────────────────────────────
+       SETTINGS
+    ───────────────────────────────────────── */
+    .set-pg { display: none; flex-direction: column; position: absolute; inset: 0; background: var(--bg); z-index: 100; }
+    .set-pg.on { display: flex; }
+    .set-hdr { display: flex; align-items: center; gap: 10px; padding: 0 16px; height: 50px; background: var(--sf); border-bottom: 1px solid var(--bd); flex-shrink: 0; }
+    .set-title { font-size: 13px; font-weight: 600; }
+    .set-scroll { flex: 1; overflow-y: auto; padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 16px; }
+    .set-sec { font-family: var(--mono); font-size: 9px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--ink3); margin-bottom: 8px; }
+    .set-card { background: var(--sf); border: 1px solid var(--bd); border-radius: var(--r2); padding: 16px; display: flex; flex-direction: column; gap: 14px; box-shadow: var(--sh); }
+    .f-row { display: flex; flex-direction: column; gap: 6px; }
+    .f-lbl { font-size: 11px; font-weight: 500; color: var(--ink2); }
+    .f-hint { font-size: 10px; color: var(--ink3); font-family: var(--mono); }
+    .f-in { width: 100%; padding: 8px 10px; background: var(--bg); border: 1.5px solid var(--bd); border-radius: var(--r); color: var(--ink); font-family: var(--mono); font-size: 11px; outline: none; transition: border-color .15s, box-shadow .15s; }
+    .f-in:focus { border-color: var(--ac); box-shadow: 0 0 0 3px var(--ac-ring); }
+    .f-in::placeholder { color: var(--ink3); }
+    .chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chip-btn { padding: 5px 14px; border: 1.5px solid var(--bd); border-radius: 99px; background: transparent; font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--ink2); cursor: pointer; transition: all .15s; }
+    .chip-btn.on { border-color: var(--ac); color: var(--ac); background: var(--ac-bg); }
+    .set-foot { padding: 12px 16px; border-top: 1px solid var(--bd); background: var(--sf); flex-shrink: 0; }
+    .save-ok { font-family: var(--mono); font-size: 10px; color: var(--ok); margin-top: 6px; min-height: 14px; }
+    .btn-pf { width: 100%; padding: 10px; background: var(--ac); border: none; border-radius: var(--r); color: #fff; font-family: var(--font); font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s; }
+    .btn-pf:hover { background: var(--ac-h); transform: translateY(-1px); box-shadow: 0 4px 12px var(--ac-ring); }
+
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <header>
+    <div class="brand">
+      <div class="brand-dot">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+      </div>
+      <span class="brand-name">lint<em>mail</em></span>
+    </div>
+    <div class="hdr-right">
+      <div class="pill">
+        <button class="on" data-lang="en">en</button>
+        <button data-lang="pt">pt</button>
+      </div>
+      <button class="ico-btn" id="btnSettings">⚙</button>
+    </div>
+  </header>
+
+  <!-- INPUT SECTION (collapses after analysis) -->
+  <div id="inputSection">
+    <div class="mode-tabs">
+      <button class="mtab on" data-mode="paste">📋 <span data-i18n="modePaste">Paste</span></button>
+      <button class="mtab" data-mode="upload">📁 <span data-i18n="modeUpload">Upload</span></button>
+      <button class="mtab" data-mode="page">🌐 <span data-i18n="modePage">Page</span></button>
+      <button class="mtab" data-mode="ab">⚡ A/B</button>
+    </div>
+    <div class="mpanel on" id="mode-paste">
+      <textarea class="code-in" id="htmlInput" placeholder="Paste email HTML here…" data-i18n-ph="inputPlaceholder" spellcheck="false"></textarea>
+    </div>
+    <div class="mpanel" id="mode-upload">
+      <div class="drop" id="dropZone">
+        <div class="dz-icon">📄</div>
+        <div class="dz-text"><span data-i18n="dropText">Drop file here or </span><strong id="browseLink" data-i18n="browse">browse</strong></div>
+        <div class="dz-hint">.html · .htm</div>
+      </div>
+      <input type="file" id="fileIn" accept=".html,.htm"/>
+    </div>
+    <div class="mpanel" id="mode-page">
+      <div class="info-strip">
+        <strong data-i18n="pageTitle">Capture current tab</strong>
+        <span data-i18n="pageDesc">Works best on preview URLs.</span>
+      </div>
+      <button class="btn-p" id="btnCapture" style="width:100%"><span class="lbl" data-i18n="btnCapture">Capture HTML</span></button>
+      <div id="capStatus" style="font-size:10px;font-family:var(--mono);margin-top:6px;min-height:13px"></div>
+    </div>
+    <div class="mpanel" id="mode-ab">
+      <div class="ab-wrap">
+        <div class="ab-col"><div class="ab-lbl">Version A</div><textarea class="code-ab" id="htmlA" placeholder="Version A HTML…" spellcheck="false"></textarea></div>
+        <div class="ab-col"><div class="ab-lbl">Version B</div><textarea class="code-ab" id="htmlB" placeholder="Version B HTML…" spellcheck="false"></textarea></div>
+      </div>
+      <div style="font-size:10px;color:var(--ink3);margin-top:6px;font-family:var(--mono)" data-i18n="abHint">Analyzes both and shows diff.</div>
+    </div>
+    <div>
+      <div class="flbl" data-i18n="campaignLbl">campaign_type</div>
+      <select class="sel" id="campSel" style="margin-top:5px">
+        <option value="promotional"    data-i18n="c_promo">Promotional</option>
+        <option value="transactional"  data-i18n="c_trans">Transactional</option>
+        <option value="welcome"        data-i18n="c_wel">Welcome</option>
+        <option value="abandoned_cart" data-i18n="c_cart">Abandoned Cart</option>
+        <option value="newsletter"     data-i18n="c_news">Newsletter</option>
+      </select>
+    </div>
+    <div class="act-row">
+      <button class="btn-g" id="btnClear" data-i18n="btnClear">clear</button>
+      <button class="btn-p" id="btnAnalyze"><div class="spin"></div><span class="lbl" data-i18n="btnAnalyze">run analysis</span></button>
+    </div>
+    <div class="empty-state" id="emptyState">
+      <div class="empty-glyph">&lt;/&gt;</div>
+      <div class="empty-t" data-i18n="emptyT">No email loaded</div>
+      <div class="empty-b" data-i18n="emptyB">Paste, upload, A/B, or capture HTML.</div>
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div id="statusBar">
+    <div class="s-score"><span class="s-num" id="sNum">—</span><span class="s-slash">/100</span></div>
+    <div class="s-meta"><div class="s-grade" id="sGrade"></div><div class="s-cap" id="sCap"></div></div>
+    <div class="s-pills" id="sPills"></div>
+  </div>
+
+  <!-- RESULT TABS -->
+  <div id="rtabs">
+    <button class="rtab" data-tab="analysis" data-i18n="tabAnalysis">Analysis</button>
+    <button class="rtab" data-tab="preview"  data-i18n="tabPreview">Preview</button>
+    <button class="rtab" data-tab="compat"   data-i18n="tabCompat">Clients</button>
+    <button class="rtab" data-tab="history"  data-i18n="tabHistory">History</button>
+  </div>
+
+  <!-- RESULT AREA: fills remaining height -->
+  <div id="resultArea">
+
+    <div class="rpanel" id="rp-analysis">
+      <div id="espRow" style="display:none"><span class="esp-badge" id="espBadge">esp: —</span></div>
+      <div id="abSummary" style="display:none;background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:11px 12px">
+        <div style="font-family:var(--mono);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--ink3);margin-bottom:8px">A/B Comparison</div>
+        <div id="abScoreRow" style="display:flex;gap:12px"></div>
+        <div id="abCatDiffs" style="margin-top:8px;display:flex;flex-direction:column;gap:4px"></div>
+      </div>
+      <div class="ai-strip" id="aiStrip">
+        <div class="ai-head"><span class="ai-tag">AI</span><span class="ai-lbl" data-i18n="aiTitle">Analysis</span></div>
+        <div class="ai-body" id="aiBody"><div class="ai-ld"><div class="ai-sp"></div>&nbsp;<span data-i18n="aiLoading">Generating…</span></div></div>
+      </div>
+      <div class="cats" id="cats"></div>
+      <div class="bot-bar">
+        <button class="btn-o" id="btnRerun">↺ <span data-i18n="btnRerun">re-run</span></button>
+        <div class="save-wrap">
+          <button class="btn-o" id="btnSaveToggle">↓ <span data-i18n="btnSave">save</span> ▾</button>
+          <div class="save-menu" id="saveMenu">
+            <button class="save-opt" data-fmt="json"><span class="save-opt-icon">{ }</span> JSON</button>
+            <button class="save-opt" data-fmt="md"><span class="save-opt-icon">📝</span> Markdown</button>
+            <button class="save-opt" data-fmt="pdf"><span class="save-opt-icon">📄</span> PDF</button>
+            <button class="save-opt" data-fmt="xlsx"><span class="save-opt-icon">📊</span> Excel (.xlsx)</button>
+          </div>
+        </div>
+        <button class="btn-o" id="btnCopy">⎘ <span data-i18n="expCopy">copy</span></button>
+        <a class="btn-coffee" href="https://buymeacoffee.com/byjuliogomes" target="_blank" rel="noopener">☕ <span data-i18n="btnCoffee">buy me a coffee</span></a>
+      </div>
+    </div>
+
+    <div class="rpanel" id="rp-preview">
+      <div class="prev-tb">
+        <div class="segrow" id="prevModeSeg">
+          <button class="on" data-prev="render">👁 <span data-i18n="prevRender">render</span></button>
+          <button data-prev="source">{ } <span data-i18n="prevSource">source</span></button>
+        </div>
+        <div class="wseg" id="widthSeg">
+          <button class="on" data-pw="600">600px</button>
+          <button data-pw="375">375px</button>
+        </div>
+        <div class="prev-notice" data-i18n="prevNotice">browser approx.</div>
+      </div>
+      <div class="prev-panel on" id="prev-render">
+        <div class="prev-modes">
+          <button class="prev-mode-btn on" data-pmode="normal"   data-i18n="pmNormal">Normal</button>
+          <button class="prev-mode-btn"    data-pmode="dark"     data-i18n="pmDark">Dark Mode</button>
+          <button class="prev-mode-btn"    data-pmode="noimages" data-i18n="pmNoImg">No Images</button>
+          <button class="prev-mode-btn"    data-pmode="fold"     data-i18n="pmFold">Fold Line</button>
+        </div>
+        <div class="pcanvas" id="pcanvas">
+          <div class="pcanvas-rel">
+            <div class="fshell d" id="frameShell">
+              <iframe id="previewFrame" sandbox="allow-same-origin" title="Email preview"></iframe>
+            </div>
+            <div class="fold-line" id="foldLine" style="display:none;top:600px"><span class="fold-label">fold ~600px</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="prev-panel" id="prev-source">
+        <div class="src-hdr">
+          <span class="src-meta" id="srcMeta">email.html</span>
+          <button class="src-copy" id="btnCopySrc" data-i18n="srcCopy">copy html</button>
+        </div>
+        <div class="src-scroll"><pre class="src" id="htmlSrc"></pre></div>
+      </div>
+    </div>
+
+    <div class="rpanel" id="rp-compat">
+      <div id="provCards"></div>
+      <div class="compat-note" data-i18n="compatNote">Static analysis · Can I Email · Litmus · MSO docs</div>
+    </div>
+
+    <div class="rpanel" id="rp-history">
+      <div class="hist-header">
+        <span class="hist-title" data-i18n="histTitle">Analysis History</span>
+        <button class="hist-clear" id="btnClearHist" data-i18n="histClear">clear all</button>
+      </div>
+      <div id="histScroll"></div>
+    </div>
+
+  </div><!-- /resultArea -->
+
+  <!-- SETTINGS OVERLAY -->
+  <div class="set-pg" id="settingsPg">
+    <div class="set-hdr">
+      <button class="ico-btn" id="btnBack">←</button>
+      <span class="set-title" data-i18n="settingsTitle">settings</span>
+    </div>
+    <div class="set-scroll">
+      <div>
+        <div class="set-sec" data-i18n="setAI">AI provider</div>
+        <div class="set-card">
+          <div class="f-row">
+            <div class="f-lbl" data-i18n="provLbl">Provider</div>
+            <div class="chip-row" id="provChips">
+              <button class="chip-btn on" data-prov="none">none</button>
+              <button class="chip-btn" data-prov="anthropic">claude</button>
+              <button class="chip-btn" data-prov="gemini">gemini</button>
+              <button class="chip-btn" data-prov="openai">openai</button>
+            </div>
+          </div>
+          <div class="f-row">
+            <div class="f-lbl" data-i18n="keyLbl">API Key</div>
+            <input class="f-in" id="keyIn" type="password" placeholder="sk-... or AIza..." data-i18n-ph="keyPh"/>
+            <div class="f-hint" data-i18n="keyHint">stored locally · never sent to lintmail servers</div>
+          </div>
+          <div class="f-row">
+            <div class="f-lbl" data-i18n="trigLbl">Show summary</div>
+            <select class="sel" id="trigSel">
+              <option value="always"  data-i18n="trigAlways">always</option>
+              <option value="below80" data-i18n="trigBelow">score &lt; 80 only</option>
+              <option value="never"   data-i18n="trigNever">never</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="set-sec" data-i18n="setPrefs">preferences</div>
+        <div class="set-card">
+          <div class="f-row">
+            <div class="f-lbl" data-i18n="defCampLbl">Default campaign type</div>
+            <select class="sel" id="defCampSel">
+              <option value="promotional"    data-i18n="c_promo">Promotional</option>
+              <option value="transactional"  data-i18n="c_trans">Transactional</option>
+              <option value="welcome"        data-i18n="c_wel">Welcome</option>
+              <option value="abandoned_cart" data-i18n="c_cart">Abandoned Cart</option>
+              <option value="newsletter"     data-i18n="c_news">Newsletter</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="set-foot">
+      <button class="btn-pf" id="btnSaveSettings" data-i18n="btnSaveSettings">save settings</button>
+      <div class="save-ok" id="saveFb"></div>
+    </div>
+  </div>
+
+</div>
+<script src="panel.js" type="module"></script>
+</body>
+</html>
